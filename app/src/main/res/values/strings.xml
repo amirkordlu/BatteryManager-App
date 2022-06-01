@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Battery Manager</string>
+    <string name="helpTextView">In this app:</string>
+    <string name="voltage">Voltage</string>
+    <string name="technology">Technology</string>
+    <string name="plug_in">Plug state</string>
+    <string name="temperature">Temperature</string>
+    <string name="app_title">Check your battery status</string>
+</resources>
