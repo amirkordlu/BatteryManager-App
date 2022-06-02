@@ -3,7 +3,9 @@ package com.amk.batterymanager.activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.amk.batterymanager.databinding.ActivitySplashBinding
+import com.amk.batterymanager.helper.SpManager
 import java.util.*
 import kotlin.concurrent.timerTask
 

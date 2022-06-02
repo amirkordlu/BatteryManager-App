@@ -1,20 +1,20 @@
 package com.amk.batterymanager.activity
 
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.graphics.Color
 import android.os.BatteryManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.amk.batterymanager.R
 import com.amk.batterymanager.utils.BatteryUsage
 import com.amk.batterymanager.databinding.ActivityMainBinding
+import com.amk.batterymanager.helper.SpManager
 import com.amk.batterymanager.model.BatteryModel
 import com.amk.batterymanager.service.BatteryAlarmService
 import java.util.ArrayList
@@ -24,14 +24,24 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
 
-        startService()
 
+        initDrawer()
+        serviceConfig()
+
+
+        registerReceiver(batteryInfoReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+
+
+    }
+
+    private fun initDrawer() {
         binding.imgMenu.setOnClickListener {
             binding.drawer.openDrawer(Gravity.RIGHT)
         }
@@ -39,13 +49,42 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this@MainActivity, UsageBatteryActivity::class.java))
             binding.drawer.closeDrawer(Gravity.RIGHT)
         }
-
-        registerReceiver(batteryInfoReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     }
 
-    private fun startService(){
-        val serviceIntent = Intent(this,BatteryAlarmService::class.java)
-        ContextCompat.startForegroundService(this,serviceIntent)
+    private fun serviceConfig() {
+        if (SpManager.isServiceOn(this) == true) {
+            binding.incDrawer.serviceSwitchTxt.text = "Service is on"
+            binding.incDrawer.serviceSwitch.isChecked = true
+            startService()
+        } else {
+            binding.incDrawer.serviceSwitchTxt.text = "Service is off"
+            binding.incDrawer.serviceSwitch.isChecked = false
+            stopService()
+        }
+
+        binding.incDrawer.serviceSwitch.setOnCheckedChangeListener { switch, isCheck ->
+            SpManager.setServiceState(this, isCheck)
+            if (isCheck) {
+                startService()
+                binding.incDrawer.serviceSwitchTxt.text = "Service is on"
+                Toast.makeText(applicationContext, "Service is turn on", Toast.LENGTH_SHORT).show()
+            } else {
+                stopService()
+                binding.incDrawer.serviceSwitchTxt.text = "Service is off"
+                Toast.makeText(applicationContext, "Service is turn off", Toast.LENGTH_SHORT).show()
+            }
+
+        }
+    }
+
+    private fun startService() {
+        val serviceIntent = Intent(this, BatteryAlarmService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent)
+    }
+
+    private fun stopService() {
+        val serviceIntent = Intent(this, BatteryAlarmService::class.java)
+        stopService(serviceIntent)
     }
 
     private var batteryInfoReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -104,5 +143,20 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onBackPressed() {
+        val dialogBuilder = AlertDialog.Builder(this)
+            .setMessage("Do you want to quit?")
+            .setCancelable(true)
+            .setPositiveButton("Yes", DialogInterface.OnClickListener { dialog, id ->
+                finish()
+            })
+            .setNegativeButton("Cancel", DialogInterface.OnClickListener { dialog, id ->
+                dialog.cancel()
+            })
+        val alert = dialogBuilder.create()
+        alert.setTitle("Exit App")
+        alert.show()
     }
 }
